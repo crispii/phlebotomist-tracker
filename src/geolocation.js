@@ -3,7 +3,6 @@ export function getPointAndPolygonCoords(data) {
     return null;
   }
 
-  // Find the point and polygon features in the geoJSON data
   const point = data.features.find(
     (feature) => feature.geometry?.type === "Point",
   );
@@ -15,7 +14,6 @@ export function getPointAndPolygonCoords(data) {
     return null;
   }
 
-  // Extract the coordinates from the point and polygon features
   const pointCoords = point.geometry.coordinates;
   const polygonCoords = polygon.geometry.coordinates[0];
 
@@ -23,22 +21,40 @@ export function getPointAndPolygonCoords(data) {
 }
 
 export function isPointInPolygon(data) {
-  const { pointCoords, polygonCoords } = getPointAndPolygonCoords(data);
-  if (!pointCoords || !polygonCoords) {
-    return false;
+  const coords = getPointAndPolygonCoords(data);
+  if (!coords) return false;
+
+  const [x, y] = coords.pointCoords;
+  const vertices = coords.polygonCoords;
+  let inside = false;
+
+  for (let i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
+    const [xi, yi] = vertices[i];
+    const [xj, yj] = vertices[j];
+
+    const isHorizontalEdge = yi === yj;
+    const isVerticalEdge = xi === xj;
+    const onHorizontalEdge =
+      isHorizontalEdge &&
+      y === yi &&
+      x >= Math.min(xi, xj) &&
+      x <= Math.max(xi, xj);
+    const onVerticalEdge =
+      isVerticalEdge &&
+      x === xi &&
+      y >= Math.min(yi, yj) &&
+      y <= Math.max(yi, yj);
+
+    if (onHorizontalEdge || onVerticalEdge) return true;
+
+    const rayCouldCross = yi > y !== yj > y;
+    const edgeCrossingX = ((xj - xi) * (y - yi)) / (yj - yi) + xi;
+    const crossingIsToTheRight = x < edgeCrossingX;
+
+    if (rayCouldCross && crossingIsToTheRight) {
+      inside = !inside;
+    }
   }
-  // Extract x and y coordinates from the point
-  const [x, y] = pointCoords;
 
-  // Extract x and y coordinates from the polygon vertices
-  const xCoords = polygonCoords.map((coord) => coord[0]);
-  const yCoords = polygonCoords.map((coord) => coord[1]);
-
-  const minX = Math.min(...xCoords);
-  const maxX = Math.max(...xCoords);
-  const minY = Math.min(...yCoords);
-  const maxY = Math.max(...yCoords);
-
-  // Check if the point is within the bounding box of the polygon
-  return x >= minX && x <= maxX && y >= minY && y <= maxY;
+  return inside;
 }

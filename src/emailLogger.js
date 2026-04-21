@@ -19,7 +19,7 @@ export async function sendEmail(clinicianId) {
       text: `Clinician ${clinicianId} is out of their safety zone`,
     });
 
-    console.log(`Email sent for clinician ${clinicianId}: ${info.response}`);
+    console.log(`Email sent for clinician ${clinicianId}`);
   } catch (error) {
     console.log(`Error sending email for clinician ${clinicianId}: ${error}`);
   }
