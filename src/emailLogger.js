@@ -15,8 +15,8 @@ export async function sendEmail(clinicianId) {
     const info = await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: EMAIL,
-      subject: "Clinician Out of Bounds Alert",
-      text: `Clinician ${clinicianId} is out of bounds`,
+      subject: "Clinician Out of Zone Alert",
+      text: `Clinician ${clinicianId} is out of their safety zone`,
     });
 
     console.log(`Email sent for clinician ${clinicianId}: ${info.response}`);

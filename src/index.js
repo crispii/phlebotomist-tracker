@@ -3,9 +3,8 @@ import { isPointInPolygon } from "./geolocation.js";
 import { sendEmail } from "./emailLogger.js";
 import { CLINICIAN_IDS, POLL_INTERVAL } from "./config.js";
 
-const prevStatus = {};
-
 async function trackClinicians() {
+  // Loop through each clinician ID and check their status
   for (const id of CLINICIAN_IDS) {
     const data = await getClinicianStatus(id);
 
@@ -15,11 +14,8 @@ async function trackClinicians() {
 
     const inBounds = isPointInPolygon(data);
 
-    if (!inBounds && prevStatus[id] !== "outOfBounds") {
+    if (!inBounds) {
       await sendEmail(id);
-      prevStatus[id] = "outOfBounds";
-    } else {
-      prevStatus[id] = "inBounds";
     }
   }
 }
