@@ -14,10 +14,23 @@ export function getPointAndPolygonCoords(data) {
     return null;
   }
 
-  const pointCoords = point.geometry.coordinates;
-  const polygonCoords = polygon.geometry.coordinates[0];
+  const pointCoords = point.geometry?.coordinates;
+  const polygonCoords = polygon.geometry.coordinates?.[0];
+
+  if (!pointCoords || !polygonCoords) {
+    return null;
+  }
 
   return { pointCoords, polygonCoords };
+}
+
+function isOnSegment(px, py, x1, y1, x2, y2) {
+  const cross = (px - x1) * (y2 - y1) - (py - y1) * (x2 - x1);
+  if (Math.abs(cross) > 1e-10) return false;
+  return (
+    Math.min(x1, x2) <= px && px <= Math.max(x1, x2) &&
+    Math.min(y1, y2) <= py && py <= Math.max(y1, y2)
+  );
 }
 
 export function isPointInPolygon(data) {
@@ -32,20 +45,7 @@ export function isPointInPolygon(data) {
     const [xi, yi] = vertices[i];
     const [xj, yj] = vertices[j];
 
-    const isHorizontalEdge = yi === yj;
-    const isVerticalEdge = xi === xj;
-    const onHorizontalEdge =
-      isHorizontalEdge &&
-      y === yi &&
-      x >= Math.min(xi, xj) &&
-      x <= Math.max(xi, xj);
-    const onVerticalEdge =
-      isVerticalEdge &&
-      x === xi &&
-      y >= Math.min(yi, yj) &&
-      y <= Math.max(yi, yj);
-
-    if (onHorizontalEdge || onVerticalEdge) return true;
+    if (isOnSegment(x, y, xi, yi, xj, yj)) return true;
 
     const rayCouldCross = yi > y !== yj > y;
     const edgeCrossingX = ((xj - xi) * (y - yi)) / (yj - yi) + xi;

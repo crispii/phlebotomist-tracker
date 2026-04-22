@@ -10,17 +10,27 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export async function sendEmail(clinicianId) {
+export async function sendEmail(clinicianId, alertType = "out_of_zone") {
+  const isEndpointFailure = alertType === "endpoint_failed";
+  const subject = isEndpointFailure
+    ? "Clinician Status Endpoint Failure Alert"
+    : "Clinician Out of Zone Alert";
+  const text = isEndpointFailure
+    ? `Unable to fetch clinician ${clinicianId} status from the clinician status API`
+    : `Clinician ${clinicianId} is out of their safety zone`;
+
   try {
-    const info = await transporter.sendMail({
+    await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: EMAIL,
-      subject: "Clinician Out of Zone Alert",
-      text: `Clinician ${clinicianId} is out of their safety zone`,
+      subject,
+      text,
     });
 
-    console.log(`Email sent for clinician ${clinicianId}`);
+    console.log(`Email sent for clinician ${clinicianId} (${alertType})`);
   } catch (error) {
-    console.log(`Error sending email for clinician ${clinicianId}: ${error}`);
+    console.log(
+      `Error sending email for clinician ${clinicianId} (${alertType}): ${error}`,
+    );
   }
 }
